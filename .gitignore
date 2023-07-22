@@ -7,3 +7,4 @@ venv
 .reports
 .coverage
 parser.out
+parsetab.py
