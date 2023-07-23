@@ -1,133 +1,128 @@
+import re
+import copy
+
+
 SELECT = 'SELECT'
-def t_SELECT(t):
-    r'SELECT'
-    return t
-
-
-INSERT = 'INSERT'
-def t_INSERT(t):
-    r'INSERT|INSERT\s+INTO'
-    return t
-
-
-UPDATE = 'UPDATE'
-def t_UPDATE(t):
-    r'UPDATE'
-    return t
-
-
-DELETE = 'DELETE'
-def t_DELETE(t):
-    r'DELETE|DELETE\s+FROM'
-    return t
-
-
-TRUNCATE = 'TRUNCATE'
-def t_TRUNCATE(t):
-    r'TRUNCATE|TRUNCATE\s+TABLE'
-    return t
-
-
-AND = 'AND'
-def t_AND(t):
-    r'AND|&'
-    return t
-
-
-OR = 'OR'
-def t_OR(t):
-    r'OR|\|'
-    return t
-
-
-SET = 'SET'
-def t_SET(t):
-    r'SET'
-    return t
-
-
-FROM = 'FROM'
-def t_FROM(t):
-    r'FROM'
-    return t
-
-
-WHERE = 'WHERE'
-def t_WHERE(t):
-    r'WHERE'
-    return t
-
-
-ORDER_BY = 'ORDER_BY'
-def t_ORDER_BY(t):
-    r'ORDER\s+BY'
-    return t
-
-
-ASCENDING = 'ASCENDING'
-def t_ASCENDING(t):
-    r'ASC|ASCENDING|↑|⇧|⇑'
-    return t
-
-
-DESCENDING = 'DESCENDING'
-def t_DESCENDING(t):
-    r'DESC|DESCENDING|↓|⇩|⇓'
-    return t
-
-
+STAR = 'STAR'
 COMMA = 'COMMA'
-t_COMMA = r','
-
-DOT = 'DOT'
-t_DOT = r'\.'
-
-SEMICOLON = 'SEMICOLON'
-t_SEMICOLON = r';'
-
 EQUALS = 'EQUALS'
-t_EQUALS = r'='
-
 LEFT_PARENTHESIS = 'LEFT_PARENTHESIS'
-t_LEFT_PARENTHESIS = r'\('
-
 RIGHT_PARENTHESIS = 'RIGHT_PARENTHESIS'
-t_RIGHT_PARENTHESIS = r'\)'
-
-TIMES = 'TIMES'
-t_TIMES = r'\*'
-
-
+FROM = 'FROM'
+INSERT = 'INSERT'
+UPDATE = 'UPDATE'
+SET = 'SET'
+DELETE = 'DELETE'
+TRUNCATE = 'TRUNCATE'
+WHERE = 'WHERE'
+AND = 'AND'
+OR = 'OR'
+ORDER_BY = 'ORDER_BY'
+ASCENDING = 'ASCENDING'
+DESCENDING = 'DESCENDING'
 LITERAL = 'LITERAL'
-def t_LITERAL(t):
-    r'(\d*\.\d+|\d+\.\d*|\d+|"[^"]*"|\'[^\']*\'|True|False)'
-    if t.value.isdigit():
-        t.value = int(t.value)
-    elif '.' in t.value:
-        t.value = float(t.value)
-    elif t.value.lower() == 'true':
-        t.value = True
-    elif t.value.lower() == 'false':
-        t.value = False
-    else:
-        t.value = t.value[1:-1]
-    return t
-
-
+IDENTITY = 'IDENTITY'
+NEW_LINE = 'NEW_LINE'
+SEMICOLON = 'SEMICOLON'
 IDENTIFIER = 'IDENTIFIER'
-def t_IDENTIFIER(t):
-    r'[a-zA-Z_][a-zA-Z0-9_]*'
-    return t
 
 
-def t_newline(t):
-    r'\n+'
-    t.lexer.lineno += len(t.value)
+class Token:
+
+    __slots__ = 'id', 'pattern', 'compiled_pattern', 'value', 'line_no', 'start', 'end'
+
+    def __init__(self, id: str, pattern: str, flags: int | re.RegexFlag = 0):
+        self.id = id
+        self.pattern = pattern
+        self.compiled_pattern = re.compile(pattern=pattern, flags=flags)
+
+        self.value = None
+        self.line_no = None
+        self.start = None
+        self.end = None
+
+    def copy(self, value: str = None, line_no: int = None, start: int = None, end: int = None):
+        """Create a copy of the Token object with optional parameters."""
+
+        new = copy.copy(self)
+
+        if value is not None:
+            new.value = value
+        if line_no is not None:
+            new.line_no = line_no
+        if start is not None:
+            new.start = start
+        if end is not None:
+            new.end = end
+
+        return new
+
+    def match(self, string: str):
+        """Try to apply the pattern at the start of the string, returning
+        a Match object, or None if no match was found."""
+        return self.compiled_pattern.match(string=string)
+
+    def findall(self, string: str):
+        """Return a list of all non-overlapping matches in the string.
+
+        If one or more capturing groups are present in the pattern, return
+        a list of groups; this will be a list of tuples if the pattern
+        has more than one group.
+
+        Empty matches are included in the result."""
+        return self.compiled_pattern.findall(string=string)
+
+    def finditer(self, string: str):
+        """Return an iterator over all non-overlapping matches in the
+        string.  For each match, the iterator returns a Match object.
+
+        Empty matches are included in the result."""
+        return self.compiled_pattern.finditer(string=string)
+
+    def count(self, string: str):
+        count = 0
+        for _ in self.finditer(string):
+            count += 1
+        return count
+
+    def fullmatch(self, string):
+        """Try to apply the pattern to all the string, returning
+        a Match object, or None if no match was found."""
+        return self.compiled_pattern.fullmatch(string=string)
+
+    def search(self, string):
+        """Scan through string looking for a match to the pattern, returning
+        a Match object, or None if no match was found."""
+        return self.compiled_pattern.search(string=string)
+
+    def span(self):
+        return self.start, self.end
+
+    def __repr__(self):
+        return f"Token(id={self.id!r}, pattern=r'{self.pattern}', span={self.span()!r}, value={self.value!r})"
 
 
-t_ignore = ' \t'
-
-
-def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
-    t.lexer.skip(1)
+sql_tokens = (
+    Token(SELECT, r'\bSELECT\b', re.IGNORECASE),
+    Token(FROM, r'\bFROM\b', re.IGNORECASE),
+    Token(INSERT, r'\bINSERT\b|\bINSERT\s+INTO\b', re.IGNORECASE),
+    Token(UPDATE, r'\bUPDATE\b', re.IGNORECASE),
+    Token(SET, r'\bSET\b', re.IGNORECASE),
+    Token(DELETE, r'\bDELETE\b|\bDELETE\s+FROM\b', re.IGNORECASE),
+    Token(TRUNCATE, r'\bTRUNCATE\b|TRUNCATE\s+TABLE\b', re.IGNORECASE),
+    Token(WHERE, r'\bWHERE\b', re.IGNORECASE),
+    Token(AND, r'\bAND\b|\b&\b', re.IGNORECASE),
+    Token(OR, r'\bOR\b|\b\|\b', re.IGNORECASE),
+    Token(ORDER_BY, r'\bORDER\s+BY\b', re.IGNORECASE),
+    Token(ASCENDING, r'\bASC\b|\bASCENDING\b|\b↑\b', re.IGNORECASE),
+    Token(DESCENDING, r'\bDESC\b|\bDESCENDING\b|\b↓\b', re.IGNORECASE),
+    Token(STAR, r'\*'),
+    Token(COMMA, r','),
+    Token(EQUALS, r'='),
+    Token(LEFT_PARENTHESIS, r'\('),
+    Token(RIGHT_PARENTHESIS, r'\)'),
+    Token(NEW_LINE, r'\n'),
+    Token(SEMICOLON, r';'),
+    Token(LITERAL, r'\b(\d*\.\d+|\d+\.\d*|\d+|"[^"]*"|\'[^\']*\'|True|False)\b'),
+    Token(IDENTIFIER, r'[a-zA-Z_][a-zA-Z0-9_]*'),
+)
