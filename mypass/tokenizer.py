@@ -1,51 +1,65 @@
-from typing import Sequence, Iterable
+import re
+from typing import Sequence, Type
 
-from mypass.tokens import Token, AND
+from mypass.tokens import Token
+from mypass.util import is_non_overlapping
 
 
-def tokenize(string: str, tokens: Sequence[Token]):
+def tokenize(string: str, tokens: Sequence[Type[Token]]):
+    token_spans = []
 
     def generate_tokens():
         for token in tokens:
-            for match in token.finditer(string):
-                new_token = token.copy(value=match.group(), start=match.start(), end=match.end())
-                yield new_token
+            for match in re.finditer(token.pattern, string):
+                curr_span = match.span()
+
+                if is_non_overlapping(curr_span, token_spans):
+                    token_spans.append(curr_span)
+                    instance = token(value=match.group(), start=curr_span[0], end=curr_span[1], line_no=None)
+                    yield instance
 
     sorted_tokens = sorted(generate_tokens(), key=lambda t: t.start)
 
-    def remove_duplicate_tokens():
-        if len(sorted_tokens) < 1:
-            return sorted_tokens
-
-        yield sorted_tokens[0]
-        for i in range(1, len(sorted_tokens)):
-            if sorted_tokens[i].value != sorted_tokens[i-1].value:
-                yield sorted_tokens[i]
-
-    cleansed_tokens = list(remove_duplicate_tokens())
-    return cleansed_tokens
+    return sorted_tokens
 
 
-def get_tokens_between(tokens: Iterable[Token], start_token_id=None, end_token_id=None):
+def get_tokens_between(
+        tokens: Sequence[Token], start_token: str | Type[Token] = None, end_token: str | Type[Token] = None):
+    start_token = str.upper(start_token if isinstance(start_token, str) else start_token.name)
+    end_token = str.upper(end_token if isinstance(end_token, str) else end_token.name)
+
     start_index, end_index = 0, None
 
-    if start_token_id:
-        for i, token in enumerate(tokens):
-            if token.id == start_token_id:
+    if start_token:
+        for i in range(len(tokens)):
+            if tokens[i].name.upper() == start_token:
                 start_index = i
+                break
+        else:
+            return []
 
-    if end_token_id:
-        for i, token in enumerate(tokens, start=start_index):
-            if token.id == end_token_id:
+    if end_token:
+        for i in range(start_index, len(tokens)):
+            if tokens[i].name.upper() == end_token:
                 end_index = i
+                break
 
     return tokens[start_index+1: end_index]
 
 
-def get_identifier_list(tokens: Sequence[Token]):
-    return [tokens[i].value for i in range(0, len(tokens), 2)]
+def validate_grammar(source: Sequence, target: Sequence):
+    """
+    Checks if all `target` token is in `source` in sequenced order.
+    """
 
+    if len(target) == 0:
+        return False
 
-def get_filter_dict(tokens: Sequence[Token]):
-    tokens = [token for token in tokens if token.id != AND]
-    return {tokens[i].value: tokens[i+2].value for i in range(0, len(tokens), 3)}
+    i = 0
+    for s in source:
+        if s.name == target[i].name:
+            i += 1
+            if len(target) == i:
+                return True
+
+    return False
