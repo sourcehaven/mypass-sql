@@ -49,7 +49,7 @@ def get_tokens_between(
 
 def validate_grammar(source: Sequence, target: Sequence):
     """
-    Checks if all `target` token is in `source` in sequenced order.
+    Returns True if all `target` token is in `source` in sequenced order.
     """
 
     if len(target) == 0:

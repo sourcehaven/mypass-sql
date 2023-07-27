@@ -69,7 +69,7 @@ def get_filter_dict(tokens: Sequence[Token]):
                     and isinstance(group[0], Identifier) \
                     and isinstance(group[1], Equals) \
                     and isinstance(group[2], Literal):
-                yield group[0].value, group[2].type_aware_value()
+                yield group[0].value, group[2].cast_value()
             else:
                 raise InvalidSqlStatement('...')
 

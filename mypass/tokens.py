@@ -3,6 +3,8 @@ import re
 import copy
 from typing import AnyStr
 
+from mypass.util import cast
+
 
 class Token(abc.ABC):
     pattern = None
@@ -15,23 +17,8 @@ class Token(abc.ABC):
         self.end = end
         self.line_no = line_no
 
-    def type_aware_value(self, remove_quotes=True):
-        if self.value.lower() == 'true':
-            return True
-        elif self.value.lower() == 'false':
-            return False
-        try:
-            return int(self.value)
-        except ValueError:
-            try:
-                return float(self.value)
-            except ValueError:
-                if remove_quotes:
-                    if ((self.value.startswith("'") and self.value.endswith("'"))
-                            or (self.value.startswith('"') and self.value.endswith('"'))):
-                        return self.value[1:-1]
-
-                return self.value
+    def cast_value(self, remove_quotes=True):
+        return cast(self.value, remove_quotes)
 
     def __eq__(self, other):
         return isinstance(other, Token) \
@@ -239,7 +226,7 @@ sql_tokens = (
     Where, And, Or,
     NotEquals, GreaterEquals, LessEquals, Greater, Less, Equals,
     Times, Divide, Plus, Minus,
-    Backslash, Dot, Caret, Dollar, Comma, Hashtag, Semicolon, ExclamationMark, QuestionMark, Percentage,
+    Backslash, Caret, Dollar, Comma, Hashtag, Semicolon, ExclamationMark, QuestionMark, Percentage,
     LeftBracket, RightBracket, LeftParenthesis, RightParenthesis, LeftCurlyBracket, RightCurlyBracket,
-    Identifier, Literal, Unknown,
+    Identifier, Literal, Dot, Unknown,
 )
