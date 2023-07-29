@@ -13,45 +13,45 @@ def test_select():
 
 
 def test_insert():
-    sql = 'INSERT INTO people (id, name, age) VALUES (1, "John", 25);'
+    sql = 'INSERT INTO people (id, name, age) VALUES (1, "John", 25.5);'
 
     tokens = tokenize(sql, sql_tokens)
 
-    assert tokens[0].name == INSERT and tokens[0].value == 'INSERT INTO'
-    assert tokens[1].name == IDENTIFIER and tokens[1].value == 'people'
-    assert tokens[2].name == LEFT_PARENTHESIS and tokens[2].value == '('
-    assert tokens[3].name == IDENTIFIER and tokens[3].value == 'id'
-    assert tokens[4].name == COMMA and tokens[4].value == ','
-    assert tokens[5].name == IDENTIFIER and tokens[5].value == 'name'
-    assert tokens[6].name == COMMA and tokens[6].value == ','
-    assert tokens[7].name == IDENTIFIER and tokens[7].value == 'age'
-    assert tokens[8].name == RIGHT_PARENTHESIS and tokens[8].value == ')'
-    assert tokens[9].name == VALUES and tokens[9].value == 'VALUES'
-    assert tokens[10].name == LEFT_PARENTHESIS and tokens[10].value == '('
-    assert tokens[11].name == LITERAL and tokens[11].value == '1'
-    assert tokens[12].name == COMMA and tokens[12].value == ','
-    assert tokens[13].name == LITERAL and tokens[13].value == '"John"'
-    assert tokens[14].name == COMMA and tokens[14].value == ','
-    assert tokens[15].name == LITERAL and tokens[15].value == '25'
-    assert tokens[16].name == RIGHT_PARENTHESIS and tokens[16].value == ')'
-    assert tokens[17].name == SEMICOLON and tokens[17].value == ';'
+    assert tokens[0] == Insert('INSERT INTO')
+    assert tokens[1] == Identifier('people')
+    assert tokens[2] == LeftParenthesis('(')
+    assert tokens[3] == Identifier('id')
+    assert tokens[4] == Comma(',')
+    assert tokens[5] == Identifier('name')
+    assert tokens[6] == Comma(',')
+    assert tokens[7] == Identifier('age')
+    assert tokens[8] == RightParenthesis(')')
+    assert tokens[9] == VALUES and tokens[9].value == 'VALUES'
+    assert tokens[10] == LeftParenthesis('(')
+    assert tokens[11] == LITERAL and tokens[11].value == '1'
+    assert tokens[12] == Comma(',')
+    assert tokens[13] == LITERAL and tokens[13].value == '"John"'
+    assert tokens[14] == Comma(',')
+    assert tokens[15] == Literal('25.5',) == 25.5
+    assert tokens[16] == RightParenthesis(')')
+    assert tokens[17] == Semicolon(';')
 
 
 def test_update():
-    sql = "UPDATE Employees SET Department = 'Finance' WHERE EmployeeID = 101;"
+    sql = "UPDATE Employees SET Department = 'Finance' WHERE EmployeeID = 10;"
 
     tokens = tokenize(sql, sql_tokens)
 
-    assert tokens[0].name == UPDATE and tokens[0].value == 'UPDATE'
-    assert tokens[1].name == IDENTIFIER and tokens[1].value == 'Employees'
-    assert tokens[2].name == SET and tokens[2].value == 'SET'
-    assert tokens[3].name == IDENTIFIER and tokens[3].value == 'Department'
-    assert tokens[4].name == EQUALS and tokens[4].value == '='
-    assert tokens[5].name == LITERAL and tokens[5].value == "'Finance'"
-    assert tokens[6].name == WHERE and tokens[6].value == 'WHERE'
-    assert tokens[7].name == IDENTIFIER and tokens[7].value == 'EmployeeID'
-    assert tokens[8].name == EQUALS and tokens[8].value == '='
-    assert tokens[9].name == LITERAL and tokens[9].value == '101'
+    assert tokens[0] == Update('UPDATE', 0, 6)
+    assert tokens[1] == Identifier('Employees', 7, 16)
+    assert tokens[2] == Set('SET',17, 20)
+    assert tokens[3] == Identifier('Department', 21, 31)
+    assert tokens[4] == Equals('=',32, 33)
+    assert tokens[5] == String("'Finance'", 34, 43); assert tokens[5].cast_value() == 'Finance'
+    assert tokens[6] == Where('WHERE', 44, 49)
+    assert tokens[7] == Identifier('EmployeeID', 50, 60)
+    assert tokens[8] == Equals('=', 61, 62)
+    assert tokens[9] == Integer('10', 63, 65); assert tokens[9].cast_value() == 10
 
 
 def test_delete():
@@ -59,12 +59,12 @@ def test_delete():
 
     tokens = tokenize(sql, sql_tokens)
 
-    assert tokens[0].name == DELETE and tokens[0].value == 'DELETE FROM'
-    assert tokens[1].name == IDENTIFIER and tokens[1].value == 'my_table'
-    assert tokens[2].name == WHERE and tokens[2].value == 'WHERE'
-    assert tokens[3].name == IDENTIFIER and tokens[3].value == 'x'
-    assert tokens[4].name == GREATER_EQUALS and tokens[4].value == '>='
-    assert tokens[5].name == LITERAL and tokens[5].value == '5'
+    assert tokens[0] == Delete('DELETE FROM', 0, 11)
+    assert tokens[1] == Identifier('my_table', 12, 20)
+    assert tokens[2] == Where('WHERE', 21, 26)
+    assert tokens[3] == Identifier('x', 27, 28)
+    assert tokens[4] == GreaterEquals('>=', 29, 31)
+    assert tokens[5] == Literal('5',  32, 33)
 
 
 def test_truncate():
@@ -72,6 +72,6 @@ def test_truncate():
 
     tokens = tokenize(sql, sql_tokens)
 
-    assert tokens[0].name == TRUNCATE and tokens[0].value == 'TRUNCATE TABLE'
-    assert tokens[1].name == IDENTIFIER and tokens[1].value == 'xy'
-    assert tokens[2].name == SEMICOLON and tokens[2].value == ';'
+    assert tokens[0] == Truncate('TRUNCATE TABLE', 0, 14)
+    assert tokens[1] == Identifier('xy', 15, 17)
+    assert tokens[2] == Semicolon(';', 17, 18)

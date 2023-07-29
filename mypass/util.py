@@ -1,4 +1,31 @@
-from typing import Iterable
+from typing import Sequence, Iterable
+
+from mypass.exceptions import ItemNotFound
+
+
+def find_between(iterable: Sequence, start_item=None, end_items=(), require_start=False, require_end=False):
+    start_index = 0
+    end_index = None
+
+    if start_item is not None:
+        for i, item in enumerate(iterable):
+            if item == start_item:
+                start_index = i + 1
+                break
+        else:
+            if require_start:
+                raise ItemNotFound(f'{start_item} not found in {iterable}')
+
+    if len(end_items) > 0:
+        for i, item in enumerate(iterable[start_index:], start=start_index):
+            if item in end_items:
+                end_index = i
+                break
+        else:
+            if require_end:
+                raise ItemNotFound(f'{end_items} not found in {iterable}')
+
+    return start_index, end_index
 
 
 def is_between_any(span: tuple[int, int], spans: Iterable[tuple[int, int]]):
@@ -7,7 +34,7 @@ def is_between_any(span: tuple[int, int], spans: Iterable[tuple[int, int]]):
 
     Args:
         span (tuple[int, int]): The span to check, represented as a tuple of two integers (start and end points).
-        spans (Iterable[tuple[int, int]]): An iterable of spans, where each span is represented as a tuple of two integers.
+        spans (Iterable[tuple[int, int]]): An iterable of spans, where each span is a tuple of two integers.
 
     Returns:
         bool: True if the given span is fully contained within any of the spans in the iterable; otherwise, False.
@@ -36,7 +63,7 @@ def is_overlapping(span: tuple[int, int], spans: Iterable[tuple[int, int]]):
 
     Args:
         span (tuple[int, int]): The span to check, represented as a tuple of two integers (start and end points).
-        spans (Iterable[tuple[int, int]]): An iterable of spans, where each span is represented as a tuple of two integers.
+        spans (Iterable[tuple[int, int]]): An iterable of spans, where each span is a tuple of two integers.
 
     Returns:
         bool: True if the given span overlaps with any of the spans in the iterable; otherwise, False.
@@ -72,7 +99,7 @@ def is_non_overlapping(span: tuple[int, int], spans: Iterable[tuple[int, int]]):
 
     Args:
         span (tuple[int, int]): The span to check, represented as a tuple of two integers (start and end points).
-        spans (Iterable[tuple[int, int]]): An iterable of spans, where each span is represented as a tuple of two integers.
+        spans (Iterable[tuple[int, int]]): An iterable of spans, where each span is a tuple of two integers.
 
     Returns:
         bool: True if the given span does not overlap with any of the spans in the iterable; otherwise, False.
@@ -136,7 +163,7 @@ def cast(text: str, remove_quotes=True):
     """
     if text.lower() == 'true':
         return True
-    elif text.lower() == 'false':
+    if text.lower() == 'false':
         return False
     try:
         return int(text)

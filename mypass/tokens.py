@@ -41,63 +41,71 @@ class Token(abc.ABC):
         return type(self).__name__
 
     def __repr__(self):
-        return f"Token(class={self.name!r}, pattern=r'{self.pattern.pattern}', span={self.span()!r}, value={self.value!r})"
+        return (f"Token("
+                f"class={self.name}"
+                f", pattern=r'{self.pattern.pattern}'"
+                f", span={self.span()!r}"
+                f", value={self.value!r})")
+
+
+class Comment(Token):
+    pattern = re.compile(r'--.*')
 
 
 class Insert(Token):
-    pattern = re.compile(r'\bINSERT\s+INTO\b|\bINSERT\b', re.I)
+    pattern = re.compile(r'INSERT\s+INTO|INSERT', re.I)
 
 
 class Delete(Token):
-    pattern = re.compile(r'\bDELETE\s+FROM\b|\bDELETE\b', re.I)
+    pattern = re.compile(r'DELETE\s+FROM|DELETE', re.I)
 
 
 class Truncate(Token):
-    pattern = re.compile(r'TRUNCATE\s+TABLE\b|\bTRUNCATE\b', re.I)
+    pattern = re.compile(r'TRUNCATE\s+TABLE|TRUNCATE', re.I)
 
 
 class OrderBy(Token):
-    pattern = re.compile(r'\bORDER\s+BY\b', re.I)
+    pattern = re.compile(r'ORDER\s+BY', re.I)
 
 
 class Ascending(Token):
-    pattern = re.compile(r'\bASCENDING\b|\bASC\b|\b↑\b', re.I)
+    pattern = re.compile(r'ASCENDING|ASC|↑', re.I)
 
 
 class Descending(Token):
-    pattern = re.compile(r'\bDESCENDING\b|\bDESC\b|\b↓\b', re.I)
+    pattern = re.compile(r'DESCENDING|DESC|↓', re.I)
 
 
 class Select(Token):
-    pattern = re.compile(r'\bSELECT\b', re.I)
+    pattern = re.compile(r'SELECT', re.I)
 
 
 class From(Token):
-    pattern = re.compile(r'\bFROM\b', re.I)
+    pattern = re.compile(r'FROM', re.I)
 
 
 class Values(Token):
-    pattern = re.compile(r'\bVALUES\b', re.I)
+    pattern = re.compile(r'VALUES', re.I)
 
 
 class Update(Token):
-    pattern = re.compile(r'\bUPDATE\b', re.I)
+    pattern = re.compile(r'UPDATE', re.I)
 
 
 class Set(Token):
-    pattern = re.compile(r'\bSET\b', re.I)
+    pattern = re.compile(r'SET', re.I)
 
 
 class Where(Token):
-    pattern = re.compile(r'\bWHERE\b', re.I)
+    pattern = re.compile(r'WHERE', re.I)
 
 
 class And(Token):
-    pattern = re.compile(r'\bAND\b|\b&\b', re.I)
+    pattern = re.compile(r'AND|&', re.I)
 
 
 class Or(Token):
-    pattern = re.compile(r'\bOR\b|\b\|\b', re.I)
+    pattern = re.compile(r'OR|\|', re.I)
 
 
 class NotEquals(Token):
@@ -209,11 +217,27 @@ class RightCurlyBracket(Token):
 
 
 class Identifier(Token):
-    pattern = re.compile(r'(?<![\'"])\b(?:\d*[A-Za-z_]+\d*|[A-Za-z_]\w*)\b(?![\'"])', re.I)
+    pattern = re.compile(r'[A-Za-z]\w*')
 
 
-class Literal(Token):
-    pattern = re.compile(r'\d*\.\d+|\d+\.\d*|\d+|"[^"]*"|\'[^\']*\'|True|False', re.I)
+class Literal(Token, abc.ABC):
+    pass
+
+
+class String(Literal):
+    pattern = re.compile(r'"[^"]*"|\'[^\']*\'')
+
+
+class Float(Literal):
+    pattern = re.compile(r'\d*\.\d+|\d+\.\d*')
+
+
+class Integer(Literal):
+    pattern = re.compile(r'\d+')
+
+
+class Boolean(Literal):
+    pattern = re.compile(r'\b(?:True|False)\b', re.I)
 
 
 class Unknown(Token):
@@ -221,6 +245,7 @@ class Unknown(Token):
 
 
 sql_tokens = (
+    Comment, String, Boolean,
     Insert, Delete, Truncate, OrderBy, Ascending, Descending,
     Select, From, Values, Update, Set,
     Where, And, Or,
@@ -228,5 +253,5 @@ sql_tokens = (
     Times, Divide, Plus, Minus,
     Backslash, Caret, Dollar, Comma, Hashtag, Semicolon, ExclamationMark, QuestionMark, Percentage,
     LeftBracket, RightBracket, LeftParenthesis, RightParenthesis, LeftCurlyBracket, RightCurlyBracket,
-    Identifier, Literal, Dot, Unknown,
+    Identifier, Float, Integer, Dot, Unknown,
 )

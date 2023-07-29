@@ -1,8 +1,8 @@
 import re
-from typing import Sequence, Type
+from typing import Sequence, Type, Iterable
 
 from mypass.tokens import Token
-from mypass.util import is_non_overlapping
+from mypass.util import is_non_overlapping, find_between
 
 
 def tokenize(string: str, tokens: Sequence[Type[Token]]):
@@ -23,28 +23,21 @@ def tokenize(string: str, tokens: Sequence[Type[Token]]):
     return sorted_tokens
 
 
-def get_tokens_between(
-        tokens: Sequence[Token], start_token: str | Type[Token] = None, end_token: str | Type[Token] = None):
-    start_token = str.upper(start_token if isinstance(start_token, str) else start_token.name)
-    end_token = str.upper(end_token if isinstance(end_token, str) else end_token.name)
+def find_tokens_between(
+        tokens: Sequence[Token], start_token: Type[Token] = None, end_tokens: Type[Token] | Sequence[Type[Token]] = (),
+        require_start=False, require_end=False):
 
-    start_index, end_index = 0, None
+    start_token = start_token.__name__
 
-    if start_token:
-        for i in range(len(tokens)):
-            if tokens[i].name.upper() == start_token:
-                start_index = i
-                break
-        else:
-            return []
+    if isinstance(end_tokens, Iterable):
+        end_tokens = [end_token.__name__ for end_token in end_tokens]
+    else:
+        end_tokens = end_tokens.__name__,
 
-    if end_token:
-        for i in range(start_index, len(tokens)):
-            if tokens[i].name.upper() == end_token:
-                end_index = i
-                break
+    token_names = [token.name for token in tokens]
+    indexes = find_between(token_names, start_token, end_tokens, require_start=require_start, require_end=require_end)
 
-    return tokens[start_index+1: end_index]
+    return tokens[indexes[0]: indexes[1]]
 
 
 def validate_grammar(source: Sequence, target: Sequence):

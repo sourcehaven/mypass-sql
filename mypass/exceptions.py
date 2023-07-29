@@ -1,14 +1,20 @@
-class SqlException(RuntimeError):
+class ItemNotFound(Exception):
     pass
 
 
-class InvalidSqlStatement(SqlException):
-    pass
+class SqlSyntaxError(Exception):
 
+    def __init__(self, msg: str):
+        self.msg = f'Syntax error: {msg}'
 
-class UnsupportedSqlStatement(SqlException):
-    pass
+        super().__init__(self.msg)
 
+    @classmethod
+    def from_token(cls, token, expected=None):
+        msg = (f'Invalid {token.value!r} at line {token.line_no}, '
+               f'from character {token.start} to {token.end}.')
 
-class InvalidTokenException(Exception):
-    pass
+        if expected is not None:
+            msg += f' Expected {expected!r}.'
+
+        return cls(msg)
