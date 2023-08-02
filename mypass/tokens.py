@@ -3,7 +3,7 @@ import re
 import copy
 from typing import AnyStr
 
-from mypass.util import cast
+from .util import cast
 
 
 class Token(abc.ABC):

@@ -1,6 +1,6 @@
 from typing import Sequence, Iterable
 
-from mypass.exceptions import ItemNotFound
+from .exceptions import ItemNotFound
 
 
 def find_between(iterable: Sequence, start_item=None, end_items=(), require_start=False, require_end=False):

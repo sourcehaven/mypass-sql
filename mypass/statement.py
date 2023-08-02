@@ -1,9 +1,9 @@
 from itertools import groupby
 from typing import Sequence
 
-from mypass.exceptions import SqlSyntaxError, ItemNotFound
-from mypass.tokenizer import find_tokens_between
-from mypass.tokens import (
+from .exceptions import SqlSyntaxError, ItemNotFound
+from .tokenizer import find_tokens_between
+from .tokens import (
     Token, Semicolon, And, Identifier, Times, Comma,
     Equals, Literal, LeftParenthesis, RightParenthesis, OrderBy, Where, From, Select, Insert, Truncate, Delete, Update,
     Values, Set

@@ -1,8 +1,8 @@
 import re
 from typing import Sequence, Type, Iterable
 
-from mypass.tokens import Token
-from mypass.util import is_non_overlapping, find_between
+from .tokens import Token
+from .util import is_non_overlapping, find_between
 
 
 def tokenize(string: str, tokens: Sequence[Type[Token]]):
