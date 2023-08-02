@@ -1,11 +1,11 @@
 import re
 from typing import Sequence, Type, Iterable
 
-from .tokens import Token
+from .tokens import Token, Space
 from .util import is_non_overlapping, find_between
 
 
-def tokenize(string: str, tokens: Sequence[Type[Token]]):
+def tokenize(string: str, tokens: Sequence[Type[Token]], remove_spaces=False):
     token_spans = []
 
     def generate_tokens():
@@ -19,6 +19,9 @@ def tokenize(string: str, tokens: Sequence[Type[Token]]):
                     yield instance
 
     sorted_tokens = sorted(generate_tokens(), key=lambda t: t.start)
+
+    if remove_spaces:
+        return [token for token in sorted_tokens if not isinstance(token, Space)]
 
     return sorted_tokens
 

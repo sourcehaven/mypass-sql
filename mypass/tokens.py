@@ -48,127 +48,151 @@ class Token(abc.ABC):
                 f", value={self.value!r})")
 
 
+class Keyword(Token, abc.ABC):
+    pass
+
+
+class Punctuation(Token, abc.ABC):
+    pass
+
+
+class Literal(Token, abc.ABC):
+    pass
+
+
+class Comparison(Token, abc.ABC):
+    pass
+
+
+class Arithmetic(Token, abc.ABC):
+    pass
+
+
 class Comment(Token):
     pattern = re.compile(r'--.*')
 
 
-class Insert(Token):
+class Insert(Keyword):
     pattern = re.compile(r'INSERT\s+INTO|INSERT', re.I)
 
 
-class Delete(Token):
+class Delete(Keyword):
     pattern = re.compile(r'DELETE\s+FROM|DELETE', re.I)
 
 
-class Truncate(Token):
+class Truncate(Keyword):
     pattern = re.compile(r'TRUNCATE\s+TABLE|TRUNCATE', re.I)
 
 
-class OrderBy(Token):
+class OrderBy(Keyword):
     pattern = re.compile(r'ORDER\s+BY', re.I)
 
 
-class Ascending(Token):
+class Ascending(Keyword):
     pattern = re.compile(r'ASCENDING|ASC|↑', re.I)
 
 
-class Descending(Token):
+class Descending(Keyword):
     pattern = re.compile(r'DESCENDING|DESC|↓', re.I)
 
 
-class Select(Token):
+class Select(Keyword):
     pattern = re.compile(r'SELECT', re.I)
 
 
-class From(Token):
+class From(Keyword):
     pattern = re.compile(r'FROM', re.I)
 
 
-class Values(Token):
+class Values(Keyword):
     pattern = re.compile(r'VALUES', re.I)
 
 
-class Update(Token):
+class Update(Keyword):
     pattern = re.compile(r'UPDATE', re.I)
 
 
-class Set(Token):
+class Set(Keyword):
     pattern = re.compile(r'SET', re.I)
 
 
-class Where(Token):
+class Where(Keyword):
     pattern = re.compile(r'WHERE', re.I)
 
 
-class And(Token):
+class And(Keyword):
     pattern = re.compile(r'AND|&', re.I)
 
 
-class Or(Token):
+class Or(Keyword):
     pattern = re.compile(r'OR|\|', re.I)
 
 
-class NotEquals(Token):
+class NotEquals(Comparison):
     pattern = re.compile(r'!=|<>')
 
 
-class GreaterEquals(Token):
+class GreaterEquals(Comparison):
     pattern = re.compile(r'>=')
 
 
-class LessEquals(Token):
+class LessEquals(Comparison):
     pattern = re.compile(r'<=')
 
 
-class Greater(Token):
-    pattern = re.compile(r'>')
-
-
-class Less(Token):
-    pattern = re.compile(r'<')
-
-
-class Times(Token):
-    pattern = re.compile(r'\*')
-
-
-class Divide(Token):
-    pattern = re.compile(r'/')
-
-
-class Plus(Token):
-    pattern = re.compile(r'\+')
-
-
-class Minus(Token):
-    pattern = re.compile(r'-')
-
-
-class Backslash(Token):
-    pattern = re.compile(r'\\')
-
-
-class Dot(Token):
-    pattern = re.compile(r'\.')
-
-
-class Caret(Token):
-    pattern = re.compile(r'\^')
-
-
-class Dollar(Token):
-    pattern = re.compile(r'\$')
-
-
-class Comma(Token):
-    pattern = re.compile(r',')
-
-
-class Equals(Token):
+class Equals(Comparison):
     pattern = re.compile(r'=')
 
 
-class Hashtag(Token):
+class Greater(Comparison):
+    pattern = re.compile(r'>')
+
+
+class Less(Comparison):
+    pattern = re.compile(r'<')
+
+
+class Times(Arithmetic):
+    pattern = re.compile(r'\*')
+
+
+class Divide(Arithmetic):
+    pattern = re.compile(r'/')
+
+
+class Plus(Arithmetic):
+    pattern = re.compile(r'\+')
+
+
+class Minus(Arithmetic):
+    pattern = re.compile(r'-')
+
+
+class Backslash(Punctuation):
+    pattern = re.compile(r'\\')
+
+
+class Dot(Punctuation):
+    pattern = re.compile(r'\.')
+
+
+class Caret(Punctuation):
+    pattern = re.compile(r'\^')
+
+
+class Dollar(Punctuation):
+    pattern = re.compile(r'\$')
+
+
+class Tilde(Punctuation):
+    pattern = re.compile(r'~')
+
+
+class Comma(Punctuation):
+    pattern = re.compile(r',')
+
+
+class Hashtag(Punctuation):
     pattern = re.compile(r'#')
 
 
@@ -176,52 +200,52 @@ class NewLine(Token):
     pattern = re.compile(r'\n')
 
 
-class Semicolon(Token):
+class Semicolon(Punctuation):
     pattern = re.compile(r';')
 
 
-class ExclamationMark(Token):
+class ExclamationMark(Punctuation):
     pattern = re.compile(r'!')
 
 
-class QuestionMark(Token):
+class QuestionMark(Punctuation):
     pattern = re.compile(r'\?')
 
 
-class Percentage(Token):
+class Percentage(Punctuation):
     pattern = re.compile(r'%')
 
 
-class LeftBracket(Token):
+class DoubleColon(Punctuation):
+    pattern = re.compile(r':')
+
+
+class LeftBracket(Punctuation):
     pattern = re.compile(r'\[')
 
 
-class RightBracket(Token):
+class RightBracket(Punctuation):
     pattern = re.compile(r']')
 
 
-class LeftParenthesis(Token):
+class LeftParenthesis(Punctuation):
     pattern = re.compile(r'\(')
 
 
-class RightParenthesis(Token):
+class RightParenthesis(Punctuation):
     pattern = re.compile(r'\)')
 
 
-class LeftCurlyBracket(Token):
+class LeftCurlyBracket(Punctuation):
     pattern = re.compile(r'\{')
 
 
-class RightCurlyBracket(Token):
+class RightCurlyBracket(Punctuation):
     pattern = re.compile(r'}')
 
 
 class Identifier(Token):
     pattern = re.compile(r'[A-Za-z]\w*')
-
-
-class Literal(Token, abc.ABC):
-    pass
 
 
 class String(Literal):
@@ -240,8 +264,12 @@ class Boolean(Literal):
     pattern = re.compile(r'\b(?:True|False)\b', re.I)
 
 
+class Space(Token):
+    pattern = re.compile(r'\s+')
+
+
 class Unknown(Token):
-    pattern = re.compile(r'[^\t ]+')
+    pattern = re.compile(r'\S+')
 
 
 sql_tokens = (
@@ -251,7 +279,7 @@ sql_tokens = (
     Where, And, Or,
     NotEquals, GreaterEquals, LessEquals, Greater, Less, Equals,
     Times, Divide, Plus, Minus,
-    Backslash, Caret, Dollar, Comma, Hashtag, Semicolon, ExclamationMark, QuestionMark, Percentage,
+    Backslash, Caret, Dollar, Comma, Hashtag, Semicolon, ExclamationMark, QuestionMark, Percentage, DoubleColon, Tilde,
     LeftBracket, RightBracket, LeftParenthesis, RightParenthesis, LeftCurlyBracket, RightCurlyBracket,
-    Identifier, Float, Integer, Dot, Unknown,
+    Identifier, Float, Integer, Dot, Space, Unknown,
 )
