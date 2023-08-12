@@ -2,9 +2,11 @@
 .vscode
 .idea
 venv
-**/.pytest_cache/*
-**/__pycache__/*
+**/.pytest_cache/
+**/__pycache__/
 .reports
 .coverage
 parser.out
 parsetab.py
+**.egg-info
+/build

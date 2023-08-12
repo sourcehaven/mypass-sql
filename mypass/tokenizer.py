@@ -1,27 +1,53 @@
 import re
 from typing import Sequence, Type, Iterable
 
-from .tokens import Token, Space
+from .tokens import Token, Whitespace, NewLine, Unknown
 from .util import is_non_overlapping, find_between
 
 
 def tokenize(string: str, tokens: Sequence[Type[Token]], remove_spaces=False):
     token_spans = []
 
+    def generate_unknown_token_spans():
+        prev_end = 0
+
+        for start, end in token_spans:
+            if start > prev_end:
+                yield prev_end, start
+            prev_end = end
+
+        if len(string) > prev_end:
+            yield prev_end, len(string)
+
     def generate_tokens():
         for token in tokens:
             for match in re.finditer(token.pattern, string):
                 curr_span = match.span()
-
                 if is_non_overlapping(curr_span, token_spans):
                     token_spans.append(curr_span)
                     instance = token(value=match.group(), start=curr_span[0], end=curr_span[1], line_no=None)
                     yield instance
 
     sorted_tokens = sorted(generate_tokens(), key=lambda t: t.start)
+    token_spans.sort(key=lambda s: s[0])
+
+    missing_tokens = [
+        Unknown(string[span[0]: span[1]], start=span[0], end=span[1])
+        for span in generate_unknown_token_spans()
+    ]
+
+    sorted_tokens = sorted(sorted_tokens + missing_tokens, key=lambda t: t.start)
+
+    line_no = 1
+    for token in sorted_tokens:
+        token.line_no = line_no
+        if isinstance(token, NewLine):
+            line_no += 1
+
+    sorted_tokens = [token for token in sorted_tokens]
 
     if remove_spaces:
-        return [token for token in sorted_tokens if not isinstance(token, Space)]
+        return [token for token in sorted_tokens if not isinstance(token, Whitespace)]
 
     return sorted_tokens
 
@@ -41,21 +67,3 @@ def find_tokens_between(
     indexes = find_between(token_names, start_token, end_tokens, require_start=require_start, require_end=require_end)
 
     return tokens[indexes[0]: indexes[1]]
-
-
-def validate_grammar(source: Sequence, target: Sequence):
-    """
-    Returns True if all `target` token is in `source` in sequenced order.
-    """
-
-    if len(target) == 0:
-        return False
-
-    i = 0
-    for s in source:
-        if s.name == target[i].name:
-            i += 1
-            if len(target) == i:
-                return True
-
-    return False

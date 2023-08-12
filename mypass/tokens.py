@@ -1,13 +1,12 @@
 import abc
-import re
 import copy
-from typing import AnyStr
-
-from .util import cast
+import re
+from typing import AnyStr, Iterable, Type
 
 
 class Token(abc.ABC):
-    pattern = None
+    color: str = 'ansidefault'
+    pattern: re.Pattern = None
 
     __slots__ = 'value', 'line_no', 'start', 'end'
 
@@ -17,14 +16,14 @@ class Token(abc.ABC):
         self.end = end
         self.line_no = line_no
 
-    def cast_value(self, remove_quotes=True):
-        return cast(self.value, remove_quotes)
-
     def __eq__(self, other):
-        return isinstance(other, Token) \
-            and other.name == self.name \
-            and other.span() == self.span() \
-            and other.value == self.value
+        return isinstance(other, type(self)) or isinstance(self, type(other))
+
+    def __hash__(self):
+        return hash(type(self))
+
+    def true_value(self):
+        return self.value
 
     def copy(self):
         """
@@ -34,11 +33,18 @@ class Token(abc.ABC):
         return new
 
     def span(self):
-        return self.start, self.end
+        return self.start, self.end, self.line_no
 
     @property
     def name(self):
         return type(self).__name__
+
+    def __str__(self):
+        return (f"Token("
+                f"class={self.name}"
+                f", pattern=r'{self.pattern.pattern}'"
+                f", span={self.span()!r}"
+                f", value={self.value!r})")
 
     def __repr__(self):
         return (f"Token("
@@ -48,84 +54,33 @@ class Token(abc.ABC):
                 f", value={self.value!r})")
 
 
-class Keyword(Token, abc.ABC):
-    pass
+class Command(Token):
+    color = 'ansigreen'
+
+
+class SubCommand(Token):
+    color = 'ansibrightgreen'
 
 
 class Punctuation(Token, abc.ABC):
-    pass
+    color = 'ansigray'
 
 
 class Literal(Token, abc.ABC):
-    pass
+    ...
 
 
 class Comparison(Token, abc.ABC):
-    pass
+    color = 'ansiyellow'
 
 
 class Arithmetic(Token, abc.ABC):
-    pass
+    color = 'ansibrightmagenta'
 
 
-class Comment(Token):
-    pattern = re.compile(r'--.*')
-
-
-class Insert(Keyword):
-    pattern = re.compile(r'INSERT\s+INTO|INSERT', re.I)
-
-
-class Delete(Keyword):
-    pattern = re.compile(r'DELETE\s+FROM|DELETE', re.I)
-
-
-class Truncate(Keyword):
-    pattern = re.compile(r'TRUNCATE\s+TABLE|TRUNCATE', re.I)
-
-
-class OrderBy(Keyword):
-    pattern = re.compile(r'ORDER\s+BY', re.I)
-
-
-class Ascending(Keyword):
-    pattern = re.compile(r'ASCENDING|ASC|↑', re.I)
-
-
-class Descending(Keyword):
-    pattern = re.compile(r'DESCENDING|DESC|↓', re.I)
-
-
-class Select(Keyword):
-    pattern = re.compile(r'SELECT', re.I)
-
-
-class From(Keyword):
-    pattern = re.compile(r'FROM', re.I)
-
-
-class Values(Keyword):
-    pattern = re.compile(r'VALUES', re.I)
-
-
-class Update(Keyword):
-    pattern = re.compile(r'UPDATE', re.I)
-
-
-class Set(Keyword):
-    pattern = re.compile(r'SET', re.I)
-
-
-class Where(Keyword):
-    pattern = re.compile(r'WHERE', re.I)
-
-
-class And(Keyword):
-    pattern = re.compile(r'AND|&', re.I)
-
-
-class Or(Keyword):
-    pattern = re.compile(r'OR|\|', re.I)
+class Unknown(Token):
+    color = 'ansired'
+    pattern = re.compile('.+')
 
 
 class NotEquals(Comparison):
@@ -152,7 +107,7 @@ class Less(Comparison):
     pattern = re.compile(r'<')
 
 
-class Times(Arithmetic):
+class Asterisk(Arithmetic):
     pattern = re.compile(r'\*')
 
 
@@ -170,6 +125,10 @@ class Minus(Arithmetic):
 
 class Backslash(Punctuation):
     pattern = re.compile(r'\\')
+
+
+class Slash(Punctuation):
+    pattern = re.compile(r'/')
 
 
 class Dot(Punctuation):
@@ -196,10 +155,6 @@ class Hashtag(Punctuation):
     pattern = re.compile(r'#')
 
 
-class NewLine(Token):
-    pattern = re.compile(r'\n')
-
-
 class Semicolon(Punctuation):
     pattern = re.compile(r';')
 
@@ -218,6 +173,30 @@ class Percentage(Punctuation):
 
 class DoubleColon(Punctuation):
     pattern = re.compile(r':')
+
+
+class QuotationMark(Punctuation):
+    pattern = re.compile('"')
+
+
+class Ampersand(Punctuation):
+    pattern = re.compile('&')
+
+
+class Apostrophe(Punctuation):
+    pattern = re.compile("'")
+
+
+class AtSign(Punctuation):
+    pattern = re.compile('@')
+
+
+class Underscore(Punctuation):
+    pattern = re.compile('_')
+
+
+class Backtick(Punctuation):
+    pattern = re.compile('`')
 
 
 class LeftBracket(Punctuation):
@@ -249,37 +228,110 @@ class Identifier(Token):
 
 
 class String(Literal):
+    color = 'ansibrightgreen'
     pattern = re.compile(r'"[^"]*"|\'[^\']*\'')
+
+    def true_value(self):
+        return self.value[1:-1]
 
 
 class Float(Literal):
+    color = 'ansibrightcyan'
     pattern = re.compile(r'\d*\.\d+|\d+\.\d*')
+
+    def true_value(self):
+        return float(self.value)
 
 
 class Integer(Literal):
+    color = 'ansibrightcyan'
     pattern = re.compile(r'\d+')
+
+    def true_value(self):
+        return int(self.value)
 
 
 class Boolean(Literal):
-    pattern = re.compile(r'\b(?:True|False)\b', re.I)
+    color = 'ansibrightyellow'
+    pattern = re.compile(r'\b(?:true|false|on|off)\b', re.I)
+
+    def true_value(self):
+        return self.value.lower() in ('true', 'on')
 
 
-class Space(Token):
-    pattern = re.compile(r'\s+')
+class Whitespace(Token):
+    pass
 
 
-class Unknown(Token):
-    pattern = re.compile(r'\S+')
+class Space(Whitespace):
+    pattern = re.compile(r' ')
 
 
-sql_tokens = (
-    Comment, String, Boolean,
-    Insert, Delete, Truncate, OrderBy, Ascending, Descending,
-    Select, From, Values, Update, Set,
-    Where, And, Or,
-    NotEquals, GreaterEquals, LessEquals, Greater, Less, Equals,
-    Times, Divide, Plus, Minus,
-    Backslash, Caret, Dollar, Comma, Hashtag, Semicolon, ExclamationMark, QuestionMark, Percentage, DoubleColon, Tilde,
-    LeftBracket, RightBracket, LeftParenthesis, RightParenthesis, LeftCurlyBracket, RightCurlyBracket,
-    Identifier, Float, Integer, Dot, Space, Unknown,
+class NewLine(Whitespace):
+    pattern = re.compile(r'\n')
+
+
+class Tabulator(Whitespace):
+    pattern = re.compile(r'\t')
+
+
+class CarriageReturn(Whitespace):
+    pattern = re.compile(r'\r')
+
+
+class FormFeed(Whitespace):
+    pattern = re.compile(r'\f')
+
+
+class Option(Token):
+    pass
+
+
+class LongOption(Option):
+    pattern = re.compile(r'--\w+')
+
+
+class ShortOption(Option):
+    pattern = re.compile(r'-\w+')
+
+
+def _get_keywords(__tokens: Iterable[Type[Token]], /, subclass: object = None):
+
+    def split_patterns():
+        for token in __tokens:
+            pattern_split = token.pattern.pattern.split('|')
+            for pattern in pattern_split:
+                yield pattern.lower(), token
+
+    keywords = (
+        re.sub(r'\\b', '', re.sub(r'\\s\+', ' ', pattern))
+        for pattern, token in split_patterns()
+        if issubclass(token, subclass if subclass else object)
+    )
+
+    return (keyword for keyword in keywords if re.match(r'\w+', keyword))
+
+
+literal_tokens = String, Float, Integer, Boolean
+
+arithmetic_tokens = Asterisk, Divide, Plus, Minus
+
+comparison_tokens = NotEquals, GreaterEquals, LessEquals, Equals, Greater, Less
+
+space_tokens = Space, NewLine, Tabulator, CarriageReturn, FormFeed
+
+punctuation_tokens = (
+    Backslash, Slash, Dot, Caret, Dollar,
+    Tilde, Comma, Hashtag, Percentage,
+    ExclamationMark, QuestionMark,
+    DoubleColon, Semicolon,
+    QuotationMark, Ampersand, Apostrophe, AtSign, Underscore, Backtick
 )
+
+paired_tokens = (
+    LeftBracket, RightBracket,
+    LeftCurlyBracket, RightCurlyBracket,
+    LeftParenthesis, RightParenthesis,
+)
+
+tokens = *literal_tokens, *arithmetic_tokens, *comparison_tokens, *punctuation_tokens, *paired_tokens, *space_tokens

@@ -1,6 +1,3 @@
-from mypass.tokens import *
-
-
 def test_token_pattern():
     s1 = Select.pattern.search('SELECT')
     assert s1.group() == 'SELECT'

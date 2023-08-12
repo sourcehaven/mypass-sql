@@ -1,4 +1,4 @@
-from mypass.util import find_between
+from mypass import find_between
 
 
 def test_find_between():

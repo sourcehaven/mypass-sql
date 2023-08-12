@@ -161,9 +161,9 @@ def cast(text: str, remove_quotes=True):
         >>> cast("'quoted string'")
         'quoted string'
     """
-    if text.lower() == 'true':
+    if text.lower() in ('true', 'on'):
         return True
-    if text.lower() == 'false':
+    if text.lower() in ('false', 'off'):
         return False
     try:
         return int(text)

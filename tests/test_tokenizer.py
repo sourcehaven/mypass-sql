@@ -1,5 +1,4 @@
-from mypass.tokens import *
-from mypass.tokenizer import tokenize
+from mypass import tokenize
 
 
 def test_select():
