@@ -28,7 +28,7 @@ def tokenize(string: str, tokens: Sequence[Type[Token]], remove_spaces=False):
                     instance = token(value=match.group(), start=curr_span[0], end=curr_span[1], line_no=None)
                     yield instance
 
-    sorted_tokens = sorted(generate_tokens(), key=lambda t: t.start)
+    matching_tokens = list(generate_tokens())
     token_spans.sort(key=lambda s: s[0])
 
     missing_tokens = [
@@ -36,15 +36,13 @@ def tokenize(string: str, tokens: Sequence[Type[Token]], remove_spaces=False):
         for span in generate_unknown_token_spans()
     ]
 
-    sorted_tokens = sorted(sorted_tokens + missing_tokens, key=lambda t: t.start)
+    sorted_tokens = sorted(matching_tokens + missing_tokens, key=lambda t: t.start)
 
     line_no = 1
     for token in sorted_tokens:
         token.line_no = line_no
         if isinstance(token, NewLine):
             line_no += 1
-
-    sorted_tokens = [token for token in sorted_tokens]
 
     if remove_spaces:
         return [token for token in sorted_tokens if not isinstance(token, Whitespace)]

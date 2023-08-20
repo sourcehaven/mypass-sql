@@ -17,7 +17,14 @@ class Token(abc.ABC):
         self.line_no = line_no
 
     def __eq__(self, other):
-        return isinstance(other, type(self)) or isinstance(self, type(other))
+        return isinstance(other, type(self))
+
+    def exact_eq(self, other):
+        return (self.__eq__(other)
+                and self.value == other.value
+                and self.start == other.start
+                and self.end == other.end
+                and self.line_no == other.line_no)
 
     def __hash__(self):
         return hash(type(self))
@@ -40,11 +47,7 @@ class Token(abc.ABC):
         return type(self).__name__
 
     def __str__(self):
-        return (f"Token("
-                f"class={self.name}"
-                f", pattern=r'{self.pattern.pattern}'"
-                f", span={self.span()!r}"
-                f", value={self.value!r})")
+        return self.value
 
     def __repr__(self):
         return (f"Token("
