@@ -4,9 +4,29 @@ from typing import Sequence
 from .exceptions import SqlSyntaxError, ItemNotFound
 from .tokenizer import find_tokens_between
 from .tokens import (
-    Token, Semicolon, And, Identifier, Times, Comma,
-    Equals, Literal, LeftParenthesis, RightParenthesis, OrderBy, Where, From, Select, Insert, Truncate, Delete, Update,
-    Values, Set
+    Token,
+    Semicolon,
+    Identifier,
+    Asterisk,
+    Comma,
+    Equals,
+    Literal,
+    LeftParenthesis,
+    RightParenthesis,
+)
+
+from .sql.tokens import (
+    And,
+    OrderBy,
+    Where,
+    From,
+    Select,
+    Insert,
+    Truncate,
+    Delete,
+    Update,
+    Values,
+    Set,
 )
 
 
@@ -14,16 +34,26 @@ def split_statements(tokens: Sequence[Token]):
     def is_semicolon(token: Token):
         return token.name == Semicolon.__name__
 
-    statements = (list(g) for is_semicolon, g in groupby(tokens, key=is_semicolon) if not is_semicolon)
+    statements = (
+        list(g)
+        for is_semicolon, g in groupby(tokens, key=is_semicolon)
+        if not is_semicolon
+    )
     return statements
 
 
 def remove_parenthesis(tokens: Sequence[Token]):
-    if isinstance(tokens[0], LeftParenthesis) and isinstance(tokens[-1], RightParenthesis):
+    if isinstance(tokens[0], LeftParenthesis) and isinstance(
+        tokens[-1], RightParenthesis
+    ):
         return tokens[1:-1]
-    if isinstance(tokens[0], LeftParenthesis) and not isinstance(tokens[-1], RightParenthesis):
+    if isinstance(tokens[0], LeftParenthesis) and not isinstance(
+        tokens[-1], RightParenthesis
+    ):
         raise SqlSyntaxError('Missing closing parenthesis ")" in statement!')
-    if not isinstance(tokens[0], LeftParenthesis) and isinstance(tokens[-1], RightParenthesis):
+    if not isinstance(tokens[0], LeftParenthesis) and isinstance(
+        tokens[-1], RightParenthesis
+    ):
         raise SqlSyntaxError('Missing opening parenthesis "(" in statement!')
     return tokens
 
@@ -39,43 +69,47 @@ def get_field_list(tokens: Sequence[Token]):
             else:
                 if isinstance(token, Comma):
                     continue
-                raise SqlSyntaxError.from_token(token, expected=',')
+                raise SqlSyntaxError.from_token(token, expected=",")
 
     if len(tokens) == 0:
-        raise SqlSyntaxError('Missing field(s)!')
+        raise SqlSyntaxError("Missing field(s)!")
 
     return list(generate_values())
 
 
 def get_table_name(tokens: Sequence[Token]):
     if len(tokens) == 0:
-        raise SqlSyntaxError('Table name must be specified!')
+        raise SqlSyntaxError("Table name must be specified!")
 
     if len(tokens) > 1:
-        raise SqlSyntaxError('Only a single table name can be specified!')
+        raise SqlSyntaxError("Only a single table name can be specified!")
 
     if isinstance(tokens[0], Identifier):
         return tokens[0].value
 
-    raise SqlSyntaxError(f'Invalid table name: {tokens[0].value!r}!')
+    raise SqlSyntaxError(f"Invalid table name: {tokens[0].value!r}!")
 
 
 def get_field_dict(tokens: Sequence[Token]):
     groups = [
         tuple(group)
-        for is_comma_or_and, group in groupby(tokens, lambda x: isinstance(x, (And, Comma)))
+        for is_comma_or_and, group in groupby(
+            tokens, lambda x: isinstance(x, (And, Comma))
+        )
         if not is_comma_or_and
     ]
 
     def generate_dict():
         for group in groups:
-            if len(group) == 3 \
-                    and isinstance(group[0], Identifier) \
-                    and isinstance(group[1], Equals) \
-                    and isinstance(group[2], Literal):
+            if (
+                len(group) == 3
+                and isinstance(group[0], Identifier)
+                and isinstance(group[1], Equals)
+                and isinstance(group[2], Literal)
+            ):
                 yield group[0].value, group[2].cast_value()
             else:
-                raise SqlSyntaxError('Format must be {identifier}={literal}!')
+                raise SqlSyntaxError("Format must be {identifier}={literal}!")
 
     return dict(generate_dict())
 
@@ -86,7 +120,7 @@ def __parse_select(tokens: Sequence[Token]):
     except ItemNotFound as e:
         raise SqlSyntaxError('Missing "FROM" keyword in "SELECT" statement!') from e
 
-    if len(field_tokens) == 1 and isinstance(field_tokens[0], (Identifier, Times)):
+    if len(field_tokens) == 1 and isinstance(field_tokens[0], (Identifier, Asterisk)):
         fields = field_tokens[0].value
     else:
         fields = get_field_list(field_tokens)
@@ -95,17 +129,14 @@ def __parse_select(tokens: Sequence[Token]):
     table = get_table_name(table_tokens)
 
     try:
-        where_tokens = find_tokens_between(tokens, Where, (Semicolon, OrderBy), require_start=True)
+        where_tokens = find_tokens_between(
+            tokens, Where, (Semicolon, OrderBy), require_start=True
+        )
         where_dict = get_field_dict(where_tokens)
     except ItemNotFound:
         where_dict = dict()
 
-    return {
-        'operation': 'read',
-        'table': table,
-        'fields': fields,
-        'where': where_dict
-    }
+    return {"operation": "read", "table": table, "fields": fields, "where": where_dict}
 
 
 def __parse_insert(tokens: Sequence[Token]):
@@ -118,11 +149,7 @@ def __parse_insert(tokens: Sequence[Token]):
     value_tokens = find_tokens_between(tokens, Values, Semicolon)
     values_dict = get_field_dict(value_tokens)
 
-    return {
-        'operation': 'create',
-        'table': table,
-        'fields': values_dict
-    }
+    return {"operation": "create", "table": table, "fields": values_dict}
 
 
 def __parse_update(tokens: Sequence[Token]):
@@ -142,10 +169,10 @@ def __parse_update(tokens: Sequence[Token]):
         where_dict = dict()
 
     return {
-        'operation': 'update',
-        'table': table,
-        'fields': field_dict,
-        'where': where_dict
+        "operation": "update",
+        "table": table,
+        "fields": field_dict,
+        "where": where_dict,
     }
 
 
@@ -159,11 +186,7 @@ def __parse_delete(tokens: Sequence[Token]):
     except ItemNotFound:
         where_dict = dict()
 
-    return {
-        'operation': 'delete',
-        'table': table,
-        'where': where_dict
-    }
+    return {"operation": "delete", "table": table, "where": where_dict}
 
 
 def __parser_truncate(tokens: Sequence[Token]):
@@ -172,8 +195,8 @@ def __parser_truncate(tokens: Sequence[Token]):
     table = get_table_name(table_tokens)
 
     return {
-        'operation': 'delete_all',
-        'table': table,
+        "operation": "delete_all",
+        "table": table,
     }
 
 
@@ -191,8 +214,8 @@ def parse_statement(tokens: Sequence[Token]):
     if isinstance(statement, Truncate):
         return __parser_truncate(tokens)
     raise SqlSyntaxError(
-        f'{statement} is not an SQL statement!'
-        f'Valid statements are: {Select}, {Insert}, {Update}, {Delete}, {Truncate}'
+        f"{statement} is not an SQL statement!"
+        f"Valid statements are: {Select}, {Insert}, {Update}, {Delete}, {Truncate}"
     )
 
 

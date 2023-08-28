@@ -1,97 +1,184 @@
 import abc
-import re
 
+from ..command.tokens import Command
 from ..tokens import (
-    Token, String, Boolean, NotEquals, GreaterEquals, LessEquals, Greater, Less, Equals, Asterisk,
-    Divide, Plus, Minus, Semicolon, Comma, RightParenthesis, LeftParenthesis, Identifier, LeftBracket, RightBracket,
-    Float, Integer, Dot, Space, NewLine, Tabulator, CarriageReturn, Command, _get_keywords
+    Token,
+    String,
+    Boolean,
+    NotEquals,
+    GreaterEquals,
+    LessEquals,
+    Greater,
+    Less,
+    Equals,
+    Asterisk,
+    Divide,
+    Plus,
+    Minus,
+    Semicolon,
+    Comma,
+    RightParenthesis,
+    LeftParenthesis,
+    Identifier,
+    LeftBracket,
+    RightBracket,
+    Float,
+    Integer,
+    Dot,
+    Space,
+    NewLine,
+    Tabulator,
+    CarriageReturn,
+    _get_values,
 )
+from ..util import command
 
 
+@command("sql")
 class SqlCommand(Command):
-    pattern = re.compile(r'SQL', re.I)
+    pass
 
 
+@command(r"--.*")
 class SqlComment(Token):
-    color = 'ansibrightblack'
-    pattern = re.compile(r'--.*')
+    color = "ansibrightblack"
 
 
 class SqlKeyword(Token, abc.ABC):
-    color = 'ansibrightblue'
+    color = "ansibrightblue"
 
 
+@command(r"INSERT INTO", "INSERT")
 class Insert(SqlKeyword):
-    pattern = re.compile(r'INSERT\s+INTO|INSERT', re.I)
+    pass
 
 
+@command(r"DELETE FROM", "DELETE")
 class Delete(SqlKeyword):
-    pattern = re.compile(r'DELETE\s+FROM|DELETE', re.I)
+    pass
 
 
+@command(r"TRUNCATE TABLE", "TRUNCATE")
 class Truncate(SqlKeyword):
-    pattern = re.compile(r'TRUNCATE\s+TABLE|TRUNCATE', re.I)
+    pass
 
 
+@command(r"ORDER BY")
 class OrderBy(SqlKeyword):
-    pattern = re.compile(r'ORDER\s+BY', re.I)
+    pass
 
 
+@command("ASCENDING", "ASC", default="ASC")
 class Ascending(SqlKeyword):
-    pattern = re.compile(r'ASCENDING|ASC|↑', re.I)
+    pass
 
 
+@command("DESCENDING", "DESC", default="DESC")
 class Descending(SqlKeyword):
-    pattern = re.compile(r'DESCENDING|DESC|↓', re.I)
+    pass
 
 
+@command("SELECT")
 class Select(SqlKeyword):
-    pattern = re.compile(r'SELECT', re.I)
+    pass
 
 
+@command("FROM")
 class From(SqlKeyword):
-    pattern = re.compile(r'FROM', re.I)
+    pass
 
 
+@command("VALUES")
 class Values(SqlKeyword):
-    pattern = re.compile(r'VALUES', re.I)
+    pass
 
 
+@command("UPDATE")
 class Update(SqlKeyword):
-    pattern = re.compile(r'UPDATE', re.I)
+    pass
 
 
+@command("SET")
 class Set(SqlKeyword):
-    pattern = re.compile(r'SET', re.I)
+    pass
 
 
+@command("WHERE")
 class Where(SqlKeyword):
-    pattern = re.compile(r'WHERE', re.I)
+    pass
 
 
+@command("AND", "&")
 class And(SqlKeyword):
-    pattern = re.compile(r'AND|&', re.I)
+    pass
 
 
+@command("OR", r"\|")
 class Or(SqlKeyword):
-    pattern = re.compile(r'OR|\|', re.I)
+    pass
 
 
-statement_tokens = (Select, Insert, Update, Delete, Truncate)
-
-tokens = (
-    SqlComment, String, Boolean, SqlCommand,
-    Insert, Delete, Truncate, OrderBy, Ascending, Descending,
-    Select, From, Values, Update, Set,
-    Where, And, Or,
-    NotEquals, GreaterEquals, LessEquals, Greater, Less, Equals,
-    Asterisk, Divide, Plus, Minus,
-    Comma, Semicolon,
-    LeftParenthesis, RightParenthesis,
-    LeftBracket, RightBracket,
-    Identifier, Float, Integer, Dot, Space, NewLine, Tabulator, CarriageReturn
+sql_tokens = (
+    SqlComment,
+    String,
+    Boolean,
+    SqlCommand,
+    Insert,
+    Delete,
+    Truncate,
+    OrderBy,
+    Ascending,
+    Descending,
+    Select,
+    From,
+    Values,
+    Update,
+    Set,
+    Where,
+    And,
+    Or,
+    NotEquals,
+    GreaterEquals,
+    LessEquals,
+    Greater,
+    Less,
+    Equals,
+    Asterisk,
+    Divide,
+    Plus,
+    Minus,
+    Comma,
+    Semicolon,
+    LeftParenthesis,
+    RightParenthesis,
+    LeftBracket,
+    RightBracket,
+    Identifier,
+    Float,
+    Integer,
+    Dot,
+    Space,
+    NewLine,
+    Tabulator,
+    CarriageReturn,
 )
 
 
-primary_keywords = tuple(_get_keywords(tokens, SqlCommand))
-secondary_keywords = tuple(_get_keywords(statement_tokens))
+sql_commands = _get_values(
+    (
+        Select,
+        From,
+        Where,
+        Insert,
+        Update,
+        Delete,
+        Truncate,
+        Set,
+        Values,
+        And,
+        Or,
+        Ascending,
+        Descending,
+        OrderBy,
+    )
+)

@@ -7,7 +7,7 @@ def main():
     tokens = tokenize(sql_query)
 
     for token in tokens:
-        print(token, sep='', end='')
+        print(token.__repr__())
 
     return tokens
 

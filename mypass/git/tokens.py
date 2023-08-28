@@ -1,177 +1,242 @@
-import re
-
 from ..command.tokens import Command
-from ..tokens import Space, ShortOption, LongOption, _get_keywords
+from ..tokens import _get_values
+from ..util import command
 
 
+@command("git", word_boundary=True)
 class GitCommand(Command):
-    pattern = re.compile(r'\bgit\b')
+    pass
 
 
+@command("add", word_boundary=True)
 class Add(GitCommand):
-    pattern = re.compile(r'\badd\b')
+    pass
 
 
+@command("am", word_boundary=True)
 class Am(GitCommand):
-    pattern = re.compile(r'\bam\b')
+    pass
 
 
+@command("archive", word_boundary=True)
 class Archive(GitCommand):
-    pattern = re.compile(r'\barchive\b')
+    pass
 
 
+@command("bisect", word_boundary=True)
 class Bisect(GitCommand):
-    pattern = re.compile(r'\bbisect\b')
+    pass
 
 
+@command("blame", word_boundary=True)
 class Blame(GitCommand):
-    pattern = re.compile(r'\bblame\b')
+    pass
 
 
+@command("branch", word_boundary=True)
 class Branch(GitCommand):
-    pattern = re.compile(r'\bbranch\b')
+    pass
 
 
+@command("bundle", word_boundary=True)
 class Bundle(GitCommand):
-    pattern = re.compile(r'\bbundle\b')
+    pass
 
 
+@command("checkout", word_boundary=True)
 class Checkout(GitCommand):
-    pattern = re.compile(r'\bcheckout\b')
+    pass
 
 
+@command("cherry-pick", word_boundary=True)
 class CherryPick(GitCommand):
-    pattern = re.compile(r'\bcherry-pick\b')
+    pass
 
 
+@command("clean", word_boundary=True)
 class Clean(GitCommand):
-    pattern = re.compile(r'\bclean\b')
+    pass
 
 
+@command("clone", word_boundary=True)
 class Clone(GitCommand):
-    pattern = re.compile(r'\bclone\b')
+    pass
 
 
+@command("commit", word_boundary=True)
 class Commit(GitCommand):
-    pattern = re.compile(r'\bcommit\b')
+    pass
 
 
+@command("describe", word_boundary=True)
 class Describe(GitCommand):
-    pattern = re.compile(r'\bdescribe\b')
+    pass
 
 
+@command("diff", word_boundary=True)
 class Diff(GitCommand):
-    pattern = re.compile(r'\bdiff\b')
+    pass
 
 
+@command("fetch", word_boundary=True)
 class Fetch(GitCommand):
-    pattern = re.compile(r'\bfetch\b')
+    pass
 
 
+@command("format-patch", word_boundary=True)
 class FormatPatch(GitCommand):
-    pattern = re.compile(r'\bformat-patch\b')
+    pass
 
 
+@command("grep", word_boundary=True)
 class Grep(GitCommand):
-    pattern = re.compile(r'\bgrep\b')
+    pass
 
 
+@command("init", word_boundary=True)
 class Init(GitCommand):
-    pattern = re.compile(r'\binit\b')
+    pass
 
 
+@command("log", word_boundary=True)
 class Log(GitCommand):
-    pattern = re.compile(r'\blog\b')
+    pass
 
 
+@command("merge", word_boundary=True)
 class Merge(GitCommand):
-    pattern = re.compile(r'\bmerge\b')
+    pass
 
 
+@command("mv", word_boundary=True)
 class Move(GitCommand):
-    pattern = re.compile(r'\bmv\b')
+    pass
 
 
+@command("pull", word_boundary=True)
 class Pull(GitCommand):
-    pattern = re.compile(r'\bpull\b')
+    pass
 
 
+@command("push", word_boundary=True)
 class Push(GitCommand):
-    pattern = re.compile(r'\bpush\b')
+    pass
 
 
+@command("rebase", word_boundary=True)
 class Rebase(GitCommand):
-    pattern = re.compile(r'\brebase\b')
+    pass
 
 
+@command("reset", word_boundary=True)
 class Reset(GitCommand):
-    pattern = re.compile(r'\breset\b')
+    pass
 
 
+@command("restore", word_boundary=True)
 class Restore(GitCommand):
-    pattern = re.compile(r'\brestore\b')
+    pass
 
 
+@command("revert", word_boundary=True)
 class Revert(GitCommand):
-    pattern = re.compile(r'\brevert\b')
+    pass
 
 
+@command("rm", word_boundary=True)
 class Remove(GitCommand):
-    pattern = re.compile(r'\brm\b')
+    pass
 
 
+@command("reflog", word_boundary=True)
 class Reflog(GitCommand):
-    pattern = re.compile(r'\breflog\b')
+    pass
 
 
+@command("show", word_boundary=True)
 class Show(GitCommand):
-    pattern = re.compile(r'\bshow\b')
+    pass
 
 
+@command("stash", word_boundary=True)
 class Stash(GitCommand):
-    pattern = re.compile(r'\bstash\b')
+    pass
 
 
+@command("status", word_boundary=True)
 class Status(GitCommand):
-    pattern = re.compile(r'\bstatus\b')
+    pass
 
 
+@command("submodule", word_boundary=True)
 class Submodule(GitCommand):
-    pattern = re.compile(r'\bsubmodule\b')
+    pass
 
 
+@command("switch", word_boundary=True)
 class Switch(GitCommand):
-    pattern = re.compile(r'\bswitch\b')
+    pass
 
 
+@command("tag", word_boundary=True)
 class Tag(GitCommand):
-    pattern = re.compile(r'\btag\b')
+    pass
 
 
 class CustomGitCommand(GitCommand):
     pass
 
 
+@command("auto-commit", word_boundary=True)
 class AutoCommit(CustomGitCommand):
-    pattern = re.compile(r'\bauto-commit\b')
+    pass
 
 
+@command("auto-push", word_boundary=True)
 class AutoPush(CustomGitCommand):
-    pattern = re.compile(r'\bauto-push\b')
+    pass
 
 
-primary_keywords = (GitCommand,)
-secondary_keywords = (
-    Add, Am, Archive, Bisect, Blame, Branch, Bundle, Checkout, CherryPick, Clean,
-    Clone, Commit, Describe, Diff, Fetch, FormatPatch, Grep, Init, Log, Merge,
-    Move, Pull, Push, Rebase, Reset, Restore, Revert, Remove, Reflog, Show, Stash,
-    Status, Submodule, Switch, Tag, AutoCommit, AutoPush
+git_tokens = (
+    GitCommand,
+    Add,
+    Am,
+    Archive,
+    Bisect,
+    Blame,
+    Branch,
+    Bundle,
+    Checkout,
+    CherryPick,
+    Clean,
+    Clone,
+    Commit,
+    Describe,
+    Diff,
+    Fetch,
+    FormatPatch,
+    Grep,
+    Init,
+    Log,
+    Merge,
+    Move,
+    Pull,
+    Push,
+    Rebase,
+    Reset,
+    Restore,
+    Revert,
+    Remove,
+    Reflog,
+    Show,
+    Stash,
+    Status,
+    Submodule,
+    Switch,
+    Tag,
+    AutoCommit,
+    AutoPush,
 )
 
-tokens = (
-    Space, LongOption, ShortOption,
-    *primary_keywords, *secondary_keywords,
-)
 
-primary_keywords = tuple(_get_keywords(primary_keywords))
-secondary_keywords = tuple(_get_keywords(secondary_keywords))
+git_commands = _get_values(git_tokens)

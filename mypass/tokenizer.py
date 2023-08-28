@@ -25,14 +25,19 @@ def tokenize(string: str, tokens: Sequence[Type[Token]], remove_spaces=False):
                 curr_span = match.span()
                 if is_non_overlapping(curr_span, token_spans):
                     token_spans.append(curr_span)
-                    instance = token(value=match.group(), start=curr_span[0], end=curr_span[1], line_no=None)
+                    instance = token(
+                        value=match.group(),
+                        start=curr_span[0],
+                        end=curr_span[1],
+                        line_no=None,
+                    )
                     yield instance
 
     matching_tokens = list(generate_tokens())
     token_spans.sort(key=lambda s: s[0])
 
     missing_tokens = [
-        Unknown(string[span[0]: span[1]], start=span[0], end=span[1])
+        Unknown(string[span[0] : span[1]], start=span[0], end=span[1])
         for span in generate_unknown_token_spans()
     ]
 
@@ -51,17 +56,26 @@ def tokenize(string: str, tokens: Sequence[Type[Token]], remove_spaces=False):
 
 
 def find_tokens_between(
-        tokens: Sequence[Token], start_token: Type[Token] = None, end_tokens: Type[Token] | Sequence[Type[Token]] = (),
-        require_start=False, require_end=False):
-
+    tokens: Sequence[Token],
+    start_token: Type[Token] = None,
+    end_tokens: Type[Token] | Sequence[Type[Token]] = (),
+    require_start=False,
+    require_end=False,
+):
     start_token = start_token.__name__
 
     if isinstance(end_tokens, Iterable):
         end_tokens = [end_token.__name__ for end_token in end_tokens]
     else:
-        end_tokens = end_tokens.__name__,
+        end_tokens = (end_tokens.__name__,)
 
     token_names = [token.name for token in tokens]
-    indexes = find_between(token_names, start_token, end_tokens, require_start=require_start, require_end=require_end)
+    indexes = find_between(
+        token_names,
+        start_token,
+        end_tokens,
+        require_start=require_start,
+        require_end=require_end,
+    )
 
-    return tokens[indexes[0]: indexes[1]]
+    return tokens[indexes[0] : indexes[1]]

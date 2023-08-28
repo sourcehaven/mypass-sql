@@ -1,68 +1,132 @@
-import re
+from typing import Optional, Iterable, Sequence
 
-from ..tokens import Command, SubCommand, _get_keywords
-
-
-class Quit(Command):
-    pattern = re.compile(r'QUIT|EXIT', re.I)
+from ..tokens import Token, _get_values, Identifier, Equals, Comma, Integer, Float, String, Space, Pipe, Literal
+from ..util import command
 
 
+class Command(Token):
+    color = "ansigreen"
+
+
+@command("create", "add", "new", default="add")
+class Add(Command):
+    pass
+
+
+@command("clear", "cls", default="cls", windows="cls", linux="clear")
+class Cls(Command):
+    pass
+
+
+@command("copy", "cp", default="copy", windows="copy", linux="cp")
+class Copy(Command):
+    pass
+
+
+@command("pwd", "chdir", default="pwd")
+class Pwd(Command):
+    """Print working directory"""
+    pass
+
+
+@command("cd")
+class Cd(Command):
+    """Change directory"""
+    pass
+
+
+@command("delete", "remove", "rm", "del", default="del", windows="del", linux="rm")
+class Remove(Command):
+    pass
+
+
+@command("exit", "quit", "q", default="exit")
+class Exit(Command):
+    pass
+
+
+@command("help")
 class Help(Command):
-    pattern = re.compile(r'HELP', re.I)
+    pass
 
 
-class Clear(Command):
-    pattern = re.compile(r'CLEAR\s+SCREEN|CLEAR|CLS', re.I)
-
-
+@command("history", "hist")
 class History(Command):
-    pattern = re.compile(r'HISTORY', re.I)
+    pass
 
 
+@command("host")
 class Host(Command):
-    pattern = re.compile(r'HOST', re.I)
+    pass
 
 
+@command("list", "dir", "ls", default="ls")
+class List(Command):
+    pass
+
+
+@command("mkdir", "md")
+class MkDir(Command):
+    pass
+
+
+@command("port")
 class Port(Command):
-    pattern = re.compile(r'PORT', re.I)
+    pass
 
 
-class Vault(Command):
-    pattern = re.compile(r'VAULT', re.I)
+@command("show", "grep", "find", default="show", linux="grep", windows="find")
+class Show(Command):
+    pass
 
 
-class Master(Command):
-    pattern = re.compile(r'MASTER', re.I)
+@command("update", "change", default="update")
+class Update(Command):
+    pass
 
 
-class Create(SubCommand):
-    pattern = re.compile(r'ADD|CREATE|NEW|INSERT', re.I)
+@command("whoami")
+class WhoAmI(Command):
+    pass
 
 
-class Read(SubCommand):
-    pattern = re.compile(r'READ|SELECT|GET', re.I)
+class CommandHierarchy:
+
+    def __init__(self, hierarchy: dict):
+        self.hierarchy = hierarchy
+
+    def validate_tokens(self, tokens: Sequence[Token]):
+        for i, token in enumerate(tokens):
+            if type(token) in self.hierarchy:
+                self.hierarchy = self.hierarchy[type(token)]
 
 
-class Update(SubCommand):
-    pattern = re.compile('UPDATE|CHANGE', re.I)
+command_tokens = (
+    Add,
+    Cls,
+    Copy,
+    Pwd,
+    Remove,
+    Exit,
+    Help,
+    History,
+    Host,
+    List,
+    MkDir,
+    Port,
+    Show,
+    Update,
+    WhoAmI,
+    Pipe,
+    String,
+    Identifier,
+    Integer,
+    Float,
+    Equals,
+    Comma,
+    Space,
+)
 
 
-class Delete(SubCommand):
-    pattern = re.compile(r'DELETE|REMOVE', re.I)
 
-
-class Copy(SubCommand):
-    pattern = re.compile(r'COPY', re.I)
-
-
-class List(SubCommand):
-    pattern = re.compile(r'LIST|SHOW', re.I)
-
-
-command_tokens = Clear, Quit, History, Help, Host, Port, Vault, Master
-subcommand_tokens = Create, Read, Update, Delete, Copy, List
-
-tokens = *command_tokens, *subcommand_tokens
-
-primary_keywords = tuple(_get_keywords(command_tokens))
-secondary_keywords = tuple(_get_keywords(subcommand_tokens))
+commands = _get_values(command_tokens)

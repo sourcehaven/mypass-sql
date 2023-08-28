@@ -1,9 +1,77 @@
+import re
 from typing import Sequence, Iterable
 
 from .exceptions import ItemNotFound
 
 
-def find_between(iterable: Sequence, start_item=None, end_items=(), require_start=False, require_end=False):
+def generate_word_positions_with_lines(text: str):
+    """
+    Generate word positions along with line numbers from the given text.
+
+    Args:
+        text (str): The input text to process.
+
+    Yields:
+        tuple: A tuple containing the word, start position, end position, and line number.
+    """
+    start = 0
+    end = 0
+    line_no = 1
+    word = ''
+
+    for c in text:
+        if c in (' ', '\n'):
+            if word:
+                yield word, start, end, line_no
+                word = ''
+            start = end + 1
+        else:
+            word += c
+
+        if c == '\n':
+            line_no += 1
+        end += 1
+
+    yield word, start, end, line_no
+
+
+def command(*values, default=None, windows=None, linux=None, word_boundary=False):
+    def decorator(cls):
+
+        def any_space_between(values):
+            for value in values:
+                if ' ' in value:
+                    splits = value.split(' ')
+                    yield r'\s+'.join(splits)
+                else:
+                    yield value
+
+        cls.values = values
+
+        if word_boundary:
+            pattern = r'\b' + r'\b|\b'.join(any_space_between(values)) + r'\b'
+        else:
+            pattern = r'|'.join(any_space_between(values))
+
+        cls.pattern = re.compile(pattern, re.I)
+
+        if default:
+            cls.default = default
+        else:
+            cls.default = values[0]
+        cls.windows = windows
+        cls.linux = linux
+        return cls
+    return decorator
+
+
+def find_between(
+    iterable: Sequence,
+    start_item=None,
+    end_items=(),
+    require_start=False,
+    require_end=False,
+):
     start_index = 0
     end_index = None
 
@@ -14,7 +82,7 @@ def find_between(iterable: Sequence, start_item=None, end_items=(), require_star
                 break
         else:
             if require_start:
-                raise ItemNotFound(f'{start_item} not found in {iterable}')
+                raise ItemNotFound(f"{start_item} not found in {iterable}")
 
     if len(end_items) > 0:
         for i, item in enumerate(iterable[start_index:], start=start_index):
@@ -23,7 +91,7 @@ def find_between(iterable: Sequence, start_item=None, end_items=(), require_star
                 break
         else:
             if require_end:
-                raise ItemNotFound(f'{end_items} not found in {iterable}')
+                raise ItemNotFound(f"{end_items} not found in {iterable}")
 
     return start_index, end_index
 
@@ -86,7 +154,6 @@ def is_overlapping(span: tuple[int, int], spans: Iterable[tuple[int, int]]):
     """
 
     for s in spans:
-
         if span[1] >= s[0] and span[0] <= s[1]:
             return True
 
@@ -161,9 +228,9 @@ def cast(text: str, remove_quotes=True):
         >>> cast("'quoted string'")
         'quoted string'
     """
-    if text.lower() in ('true', 'on'):
+    if text.lower() in ("true", "on"):
         return True
-    if text.lower() in ('false', 'off'):
+    if text.lower() in ("false", "off"):
         return False
     try:
         return int(text)
@@ -172,7 +239,9 @@ def cast(text: str, remove_quotes=True):
             return float(text)
         except ValueError:
             if remove_quotes:
-                if (text.startswith("'") and text.endswith("'")) or (text.startswith('"') and text.endswith('"')):
+                if (text.startswith("'") and text.endswith("'")) or (
+                    text.startswith('"') and text.endswith('"')
+                ):
                     return text[1:-1]
 
             return text
